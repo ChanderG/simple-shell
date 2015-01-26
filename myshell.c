@@ -42,6 +42,18 @@ void preExit(char* input){
   exit(1);
 }
 
+//handle the command "pwd"
+void commandPwd(){ 
+  char* path = (char*)malloc(PATH_MAX* sizeof(char));
+  if(getcwd(path, PATH_MAX) == NULL){
+    perror("Failed to get cwd path.");
+    free(path);
+    return;
+  }
+  puts(path);
+  free(path);
+}
+
 //parse the input and call the corresponding function
 void handleCommand(char* input){
   //buffer the same size as input, for safety 
@@ -54,8 +66,9 @@ void handleCommand(char* input){
   }
 
   //understand the command and take relevant action
-  puts(input); 
-  puts(command); 
+  if(strcmp(command, "pwd") == 0){
+    commandPwd();
+  }
 
   free(command);
   return;
