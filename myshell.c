@@ -72,7 +72,7 @@ void commandCd(char** command_list){
 void commandMkdir(char** command_list){
   int i = 1;
   while(command_list[i] != NULL){
-    if( -1 == mkdir(command_list[i])){
+    if( -1 == mkdir(command_list[i], 0777)){
       perror(command_list[i]);
     }
     i++;
