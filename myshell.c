@@ -129,7 +129,10 @@ void commandLs(char** command_list){
         //was able to successfully run stat
 	if(direntp->d_name[0] != '.'){  
 	  //only for non-hidden files
-	  printf("%d ", (int)statp.st_size);
+	  //TODO: update rough hard coded sizes, eg most size fits in 5, but GB goes to 10
+	  //TODO: get user name, group name from getpwnam(3)
+	  printf("%2d ", (int)statp.st_nlink);
+	  printf("%5d ", (int)statp.st_size);
 	  printf("%s\n", direntp->d_name);
 	}  
       }
