@@ -11,6 +11,7 @@
 #include<error.h>
 
 #include<dirent.h>  //for ls
+#include<sys/stat.h>
 
 //needed constants
  //mem size for prompt string
@@ -115,6 +116,24 @@ void commandLs(char** command_list){
 	printf("%s  ", direntp->d_name);
     }
     printf("\n");
+  }
+  else if(strcmp(command_list[1], "-l") == 0){
+    //ls -l command
+    struct stat statp;
+    while(NULL != (direntp = readdir(dirp))){
+      if( -1 == stat(direntp->d_name, &statp)){
+        //error in running stat command 
+	perror("STAT");
+      }
+      else{
+        //was able to successfully run stat
+	if(direntp->d_name[0] != '.'){  
+	  //only for non-hidden files
+	  printf("%d ", (int)statp.st_size);
+	  printf("%s\n", direntp->d_name);
+	}  
+      }
+    }
   }
   //handle illegal cases 
 
