@@ -10,6 +10,8 @@
 #include<readline/history.h>
 #include<error.h>
 
+#include<dirent.h>  //for ls
+
 //needed constants
  //mem size for prompt string
 #define PROMPT_SIZE PATH_MAX + 2
@@ -90,6 +92,37 @@ void commandRmdir(char** command_list){
   }
 }
 
+//handle the command "ls"
+//this implementation for now only handles ls (of current directory) and ls -l of the same
+//no directory specification supported
+void commandLs(char** command_list){
+  DIR* dirp;  //the current directory opened for reading
+  if(NULL == (dirp = opendir("."))){
+    perror("Error in opening directory "); 
+    return;
+  }
+
+  struct dirent* direntp;
+
+  if(command_list[1] == NULL){
+    //simple ls command
+    //TODO: needs better alignment when printing
+    //TODO: needs colored output
+    //TODO: needs ordering of names
+    while(NULL != (direntp = readdir(dirp))){
+      //do not display hidden files
+      if(direntp->d_name[0] != '.')  
+	printf("%s  ", direntp->d_name);
+    }
+    printf("\n");
+  }
+  //handle illegal cases 
+
+  if(-1 == closedir(dirp)){
+    perror("Error in closing directory ");
+  }
+}
+
 //parse the input and call the corresponding function
 void handleCommand(char* input){
   //buffer the same size as input, for safety 
@@ -141,6 +174,9 @@ void handleCommand(char* input){
   }
   else if(strcmp(command, "rmdir") == 0){
     commandRmdir(command_list);
+  }
+  else if(strcmp(command, "ls") == 0){
+    commandLs(command_list);
   }
  
 
