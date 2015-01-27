@@ -79,6 +79,17 @@ void commandMkdir(char** command_list){
   }
 }
 
+//handle the command "rmdir"
+void commandRmdir(char** command_list){
+  int i = 1;
+  while(command_list[i] != NULL){
+    if( -1 == rmdir(command_list[i])){
+      perror(command_list[i]);
+    }
+    i++;
+  }
+}
+
 //parse the input and call the corresponding function
 void handleCommand(char* input){
   //buffer the same size as input, for safety 
@@ -127,6 +138,9 @@ void handleCommand(char* input){
   }
   else if(strcmp(command, "mkdir") == 0){
     commandMkdir(command_list);
+  }
+  else if(strcmp(command, "rmdir") == 0){
+    commandRmdir(command_list);
   }
  
 
