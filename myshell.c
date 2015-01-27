@@ -69,16 +69,14 @@ void commandCd(char** command_list){
 }
 
 //handle the command "mkdir"
-void commandMkdir(char* input){
-  char* dirname = (char*)malloc(PATH_MAX* sizeof(char));
-  int i = 6; //"mkdir" 
-  for(;i<strlen(input);i++){
-    if(input[i-1] == ' '){
-      sscanf(input+i, "%s ", dirname);
-      puts(dirname);
+void commandMkdir(char** command_list){
+  int i = 1;
+  while(command_list[i] != NULL){
+    if( -1 == mkdir(command_list[i])){
+      perror(command_list[i]);
     }
+    i++;
   }
-
 }
 
 //parse the input and call the corresponding function
@@ -128,7 +126,7 @@ void handleCommand(char* input){
     commandCd(command_list);
   }
   else if(strcmp(command, "mkdir") == 0){
-    commandMkdir(input);
+    commandMkdir(command_list);
   }
  
 
