@@ -55,17 +55,16 @@ void commandPwd(){
 }
 
 //handle the command "cd"
-void commandCd(char* input){
+void commandCd(char** command_list){
   //needs to be cd
-  int i = 3;
-  for(;i<strlen(input);i++){
-    if(input[i] == ' '){
-      input[i] = '\0';
-      break;
-    }  
+  if(command_list[1] == NULL){
+    //handle "cd" without args
+    //TODO: jump to home directory 
+    printf("cd: ");
+    puts("No directory specified.");
   }
-  if(-1 == chdir(input + 3)){
-    perror(input+3);
+  else if(-1 == chdir(command_list[1])){
+    perror(command_list[1]);
   }
 }
 
@@ -93,6 +92,9 @@ void handleCommand(char* input){
     preExit(input);
   }
 
+  //routine to parse the commandline and store each word in a seperate char array
+  //the whole array is finished by a NULL pointer
+  //TODO: modularize this out
   char* word;
   int no_words= 0;
 
@@ -103,27 +105,27 @@ void handleCommand(char* input){
     word = strtok(NULL, " ");
   }
   free(input_copy);
-  printf("%d\n", no_words);
-  char** command_list = (char**)malloc(no_words*sizeof(char*)); 
+  char** command_list = (char**)malloc((no_words+1)*sizeof(char*)); 
 
   no_words = 0;
   input_copy = strdup(input);
   word = strtok(input_copy, " ");
   while(word != NULL){
     command_list[no_words] = (char*)malloc(strlen(word)*sizeof(char));
-    puts(word);
     strcpy(command_list[no_words], word);
     word = strtok(NULL, " ");
     no_words++;
   }  
+  command_list[no_words] = NULL;
   free(input_copy);
+
 
   //understand the command and take relevant action
   if(strcmp(command, "pwd") == 0){
     commandPwd();
   }
   else if(strcmp(command, "cd") == 0){
-    commandCd(input);
+    commandCd(command_list);
   }
   else if(strcmp(command, "mkdir") == 0){
     commandMkdir(input);
