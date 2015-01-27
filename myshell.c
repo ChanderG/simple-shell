@@ -150,7 +150,28 @@ void commandCp(char** command_list){
 }
 
 void commandGeneral(char** command_list){
-  puts("Work in Progress");
+  //fork a child process and execute it
+  int pid;
+
+  pid = fork();
+  if(pid == -1){
+    //error
+    perror("Fork error");
+  }
+  else if(pid == 0){
+    //child code
+    //immidiately overwrite self
+    if(-1 == execvp(command_list[0], command_list)){
+      perror("Err in exec.");
+    }
+  }
+  else{
+    //parent code 
+    if(-1 == waitpid(pid, NULL, 0)){
+      perror("Error in wait from child.");
+    }
+  }
+
 }
 
 //parse the input and call the corresponding function
