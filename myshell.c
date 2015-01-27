@@ -69,6 +69,19 @@ void commandCd(char* input){
   }
 }
 
+//handle the command "mkdir"
+void commandMkdir(char* input){
+  char* dirname = (char*)malloc(PATH_MAX* sizeof(char));
+  int i = 6; //"mkdir" 
+  for(;i<strlen(input);i++){
+    if(input[i-1] == ' '){
+      sscanf(input+i, "%s ", dirname);
+      puts(dirname);
+    }
+  }
+
+}
+
 //parse the input and call the corresponding function
 void handleCommand(char* input){
   //buffer the same size as input, for safety 
@@ -80,6 +93,31 @@ void handleCommand(char* input){
     preExit(input);
   }
 
+  char* word;
+  int no_words= 0;
+
+  char* input_copy = strdup(input);
+  word = strtok(input_copy, " ");
+  while(word != NULL){
+    no_words++;
+    word = strtok(NULL, " ");
+  }
+  free(input_copy);
+  printf("%d\n", no_words);
+  char** command_list = (char**)malloc(no_words*sizeof(char*)); 
+
+  no_words = 0;
+  input_copy = strdup(input);
+  word = strtok(input_copy, " ");
+  while(word != NULL){
+    command_list[no_words] = (char*)malloc(strlen(word)*sizeof(char));
+    puts(word);
+    strcpy(command_list[no_words], word);
+    word = strtok(NULL, " ");
+    no_words++;
+  }  
+  free(input_copy);
+
   //understand the command and take relevant action
   if(strcmp(command, "pwd") == 0){
     commandPwd();
@@ -87,9 +125,13 @@ void handleCommand(char* input){
   else if(strcmp(command, "cd") == 0){
     commandCd(input);
   }
+  else if(strcmp(command, "mkdir") == 0){
+    commandMkdir(input);
+  }
  
 
   free(command);
+  free(command_list);   //is this valid?
   return;
 }  
 
