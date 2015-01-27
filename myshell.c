@@ -145,6 +145,14 @@ void commandLs(char** command_list){
   }
 }
 
+void commandCp(char** command_list){
+  puts("Work in Progress");
+}
+
+void commandGeneral(char** command_list){
+  puts("Work in Progress");
+}
+
 //parse the input and call the corresponding function
 void handleCommand(char* input){
   //buffer the same size as input, for safety 
@@ -199,6 +207,12 @@ void handleCommand(char* input){
   }
   else if(strcmp(command, "ls") == 0){
     commandLs(command_list);
+  }
+  else if(strcmp(command, "cp") == 0){
+    commandCp(command_list);
+  }
+  else{
+    commandGeneral(command_list);
   }
  
 
