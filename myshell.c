@@ -54,6 +54,21 @@ void commandPwd(){
   free(path);
 }
 
+//handle the command "cd"
+void commandCd(char* input){
+  //needs to be cd
+  int i = 3;
+  for(;i<strlen(input);i++){
+    if(input[i] == ' '){
+      input[i] = '\0';
+      break;
+    }  
+  }
+  if(-1 == chdir(input + 3)){
+    perror(input+3);
+  }
+}
+
 //parse the input and call the corresponding function
 void handleCommand(char* input){
   //buffer the same size as input, for safety 
@@ -69,6 +84,10 @@ void handleCommand(char* input){
   if(strcmp(command, "pwd") == 0){
     commandPwd();
   }
+  else if(strcmp(command, "cd") == 0){
+    commandCd(input);
+  }
+ 
 
   free(command);
   return;
