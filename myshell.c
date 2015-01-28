@@ -152,6 +152,7 @@ void commandCp(char** command_list){
 void commandGeneral(char** command_list){
   //fork a child process and execute it
   int pid;
+  int background = 0;
 
   pid = fork();
   if(pid == -1){
@@ -161,14 +162,29 @@ void commandGeneral(char** command_list){
   else if(pid == 0){
     //child code
     //immidiately overwrite self
+    //if last char of command is '&'
+    //TODO: if & seperated by space
+    if(command_list[0][strlen(command_list[0])-1] == '&'){
+      command_list[0][strlen(command_list[0]) - 1] = '\0';
+      background = 1;
+    }  
+
+    //normal case
     if(-1 == execvp(command_list[0], command_list)){
       perror("Err in exec.");
     }
   }
   else{
     //parent code 
-    if(-1 == waitpid(pid, NULL, 0)){
-      perror("Error in wait from child.");
+    if(background == 1){
+      //run process in background
+      //TODO: find if setsid and/or closing fd 0,1 and 2 must be done
+    }
+    else{
+     //normal case 
+      if(-1 == waitpid(pid, NULL, 0)){
+	perror("Error in wait from child.");
+      }
     }
   }
 
