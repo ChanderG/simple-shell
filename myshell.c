@@ -12,10 +12,14 @@
 
 #include<dirent.h>  //for ls
 #include<sys/stat.h>
+#include<fcntl.h>  //for O_RDONLY flag
 
 //needed constants
  //mem size for prompt string
 #define PROMPT_SIZE PATH_MAX + 2
+
+#define BUFFERSIZE 4096
+#define COPYMODE 0644
 
 //calculate the prompt string using current directory
 void getPrompt(char prompt[]){
@@ -169,8 +173,43 @@ void commandCp(char** command_list){
     return;
   }
 
-  puts("Work in Progress");
+  //ready to read from source
+  int fd = open(command_list[1], O_RDONLY);
+  if (fd == -1){
+    perror("Unable to open source file for copying: ");
+    return;
+  }
 
+  if(0 == access(command_list[2], F_OK)){
+    //destination file does exist
+    //check time stamps 
+    struct stat statps,statpd;
+    if( -1 == stat(command_list[2], &statpd)){
+      //error in running stat command 
+      printf("Error in getting time of dest file\n");
+      close(fd);
+      return;
+    }
+    if( -1 == stat(command_list[1], &statps)){
+      //error in running stat command 
+      printf("Error in getting time of source file\n");
+      close(fd);
+      return;
+    }
+
+    //both files stat struct in hand
+    //if dest file was modified later
+    if(statpd.st_atime > statps.st_atime){
+      printf("cp: warning! destination file modified later that source file\n");
+      printf("Aborting operation!!\n");
+      close(fd);
+      return;
+    }
+
+  }
+
+  close(fd);
+  puts("Work in Progress");
 }
 
 void commandGeneral(char** command_list){
