@@ -146,7 +146,31 @@ void commandLs(char** command_list){
 }
 
 void commandCp(char** command_list){
+ 
+  if(command_list[1] == NULL){
+    printf("cp: Illegal usuage\n");
+    printf("Correct syntax: cp <source file> <destination file>\n");
+    return;
+  }
+  else if(command_list[2] == NULL){
+    printf("cp: Missing destination file\n");
+    printf("Correct syntax: cp <source file> <destination file>\n");
+    return;
+  }
+
+  //check if file1 exists
+  if(-1 == access(command_list[1], F_OK)){
+    printf("cp: file \"%s\" does not exist\n", command_list[1]);
+    return;
+  }
+
+  if(-1 == access(command_list[1], R_OK)){
+    printf("cp: you do not have read access to file \"%s\"\n", command_list[1]);
+    return;
+  }
+
   puts("Work in Progress");
+
 }
 
 void commandGeneral(char** command_list){
