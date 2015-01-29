@@ -205,11 +205,36 @@ void commandCp(char** command_list){
       close(fd);
       return;
     }
-
+  }
+  
+  int fd_out = creat(command_list[2],COPYMODE);
+  if (fd_out == -1){
+    perror("Unable to open destination file for writing: ");
+    return;
   }
 
+  int status;
+  char buffer[BUFFERSIZE];
+  //TODO: needs better handling if failure occurs in between
+  while(1){
+    status = read(fd, buffer, BUFFERSIZE);
+    if(status < 0){
+      perror("Error copying file");
+      return;
+    }
+    else if(status == 0){
+      break;
+    }
+    else{
+      if(status != write(fd_out, buffer, status)){
+        perror("Error writing file");
+	return;
+      }
+    }
+  } 
+
   close(fd);
-  puts("Work in Progress");
+  close(fd_out);
 }
 
 void commandGeneral(char** command_list){
