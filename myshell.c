@@ -259,7 +259,9 @@ void commandGeneral(char** command_list){
 
     //normal case
     if(-1 == execvp(command_list[0], command_list)){
-      perror("Err in exec.");
+      //unable to exit
+      //perror(command_list[0]);
+      printf("%s: command not found\n", command_list[0]);
     }
   }
   else{
