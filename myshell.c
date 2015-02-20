@@ -285,13 +285,23 @@ void commandGeneral(char** command_list){
       case NONE: break;
       case SIMPLE_OUTFILE: //printf("Position: %d\n", ind);
 			   if(-1 == (fd = creat(command_list[ind+1], FULLMODE))){
-			   //if(-1 == (fd = open(command_list[ind+1], O_RDWR|O_CREAT))){
 			     printf("Error in opening file: %s\n", command_list[ind+1]);  
 			     return;
 			   }
                            command_list[ind] = NULL;
 			   if(-1 == dup2(fd, STDOUT_FILENO)){
 			     perror("In redirecting to simple outfile");
+			     return;
+			   }
+                           break;
+      case SIMPLE_INFILE:  //printf("Position: %d\n", ind);
+			   if(-1 == (fd = open(command_list[ind+1], O_RDONLY))){
+			     printf("Error in opening file: %s\n", command_list[ind+1]);  
+			     return;
+			   }
+                           command_list[ind] = NULL;
+			   if(-1 == dup2(fd, STDIN_FILENO)){
+			     perror("In redirecting to simple infile");
 			     return;
 			   }
                            break;
