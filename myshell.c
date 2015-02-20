@@ -15,11 +15,16 @@
 #include<fcntl.h>  //for O_RDONLY flag
 
 //needed constants
- //mem size for prompt string
+//mem size for prompt string
 #define PROMPT_SIZE PATH_MAX + 2
 
 #define BUFFERSIZE 4096
 #define COPYMODE 0644
+#define FULLMODE 0600
+
+#define NONE 0
+#define SIMPLE_OUTFILE 1
+#define SIMPLE_INFILE 2
 
 //calculate the prompt string using current directory
 void getPrompt(char prompt[]){
@@ -242,6 +247,8 @@ void commandGeneral(char** command_list){
   int pid;
   int background = 0;
 
+  int fd = -1;  //to hold the input/output file descriptor for redirection purposes
+
   pid = fork();
   if(pid == -1){
     //error
@@ -258,6 +265,39 @@ void commandGeneral(char** command_list){
     }  
 
     //normal case
+    //handle simple redirection
+
+    //if command contains '<' or '>'
+    int ind=0;
+    int redirection = NONE;
+    for(ind;command_list[ind] != NULL;ind++){
+      if(strcmp(command_list[ind], ">") == 0){
+        redirection = SIMPLE_OUTFILE;         
+	break;
+      }
+      else if(strcmp(command_list[ind], "<") == 0){
+        redirection = SIMPLE_INFILE;         
+	break;
+      }
+    }
+
+    switch(redirection){
+      case NONE: break;
+      case SIMPLE_OUTFILE: //printf("Position: %d\n", ind);
+			   if(-1 == (fd = creat(command_list[ind+1], FULLMODE))){
+			   //if(-1 == (fd = open(command_list[ind+1], O_RDWR|O_CREAT))){
+			     printf("Error in opening file: %s\n", command_list[ind+1]);  
+			     return;
+			   }
+                           command_list[ind] = NULL;
+			   if(-1 == dup2(fd, STDOUT_FILENO)){
+			     perror("In redirecting to simple outfile");
+			     return;
+			   }
+                           break;
+      default: break;
+    }
+
     if(-1 == execvp(command_list[0], command_list)){
       //unable to exit
       //perror(command_list[0]);
@@ -277,6 +317,9 @@ void commandGeneral(char** command_list){
       }
     }
   }
+
+  if(fd != -1)  //if open that is
+    close(fd);
 
 }
 
@@ -315,7 +358,7 @@ void handleCommand(char* input){
     word = strtok(NULL, " ");
     no_words++;
   }  
-  command_list[no_words] = NULL;
+  command_list[no_words] = NULL;   //the last item in the list is a NULL pointer
   free(input_copy);
 
 
