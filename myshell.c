@@ -328,6 +328,20 @@ void commandGeneral(char** command_list){
 	if(strcmp(command_list[ind], "|") == 0) no_pipes++;
       }
 
+      int pipes[100][2];
+      if(no_pipes >= 100){
+        printf("Too long chain!!\n");
+	return;
+      }
+
+      for(ind = 0;ind < no_pipes;ind++){
+	if(-1 == pipe(pipes[ind])){
+	  perror("Error in creating pipe ");
+	  return;
+	}
+      }
+
+      /*
       int** pipes;
       pipes = (int**)malloc(no_pipes*sizeof(int*));
       for(ind = 0;ind < no_pipes;ind++){
@@ -341,8 +355,10 @@ void commandGeneral(char** command_list){
       for(ind = 0;command_list[ind] != NULL;ind++){
         printf("%s\n", command_list[ind]);
       }
+      */
 
       int cid;
+      int pipe_no = 0;
 
       ind = 0;
       while(1){	
@@ -357,6 +373,10 @@ void commandGeneral(char** command_list){
 	  else if(cid == 0){
 	    //child code
 	    command_list[ind] = NULL;
+	    close(pipes[0][0]);
+	    if(-1 == dup2(pipes[0][1], STDOUT_FILENO)){
+              perror("Error in dup2 x "); 
+	    }
 	    if(-1 == execvp(command_list[0], command_list)){
 	      //perror(command_list[0]);
 	      printf("%s: command not found\n", command_list[0]);
@@ -367,6 +387,10 @@ void commandGeneral(char** command_list){
 	    if(-1 == waitpid(cid, NULL, 0)){
 	      perror("Error in wait from child.");
 	    }
+	    close(pipes[0][1]);
+	    if(-1 == dup2(pipes[0][0], STDIN_FILENO)){
+              perror("Error in dup2 y "); 
+	    }
 	    command_list += ind+1;
 	    ind = -1;
 	  }
@@ -375,24 +399,9 @@ void commandGeneral(char** command_list){
       }
 
       //the last command
-      cid = fork();
-      if(cid == -1){
-	//error in forking
-	printf("Error in forking \n");
-	return;
-      }
-      else if(cid == 0){
-	//child code
-	if(-1 == execvp(command_list[0], command_list)){
-	  //perror(command_list[0]);
-	  printf("%s: command not found\n", command_list[0]);
-	}
-      }
-      else{
-	//parent code
-	if(-1 == waitpid(cid, NULL, 0)){
-	  perror("Error in wait from child.");
-	}
+      if(-1 == execvp(command_list[0], command_list)){
+	//perror(command_list[0]);
+	printf("%s: command not found\n", command_list[0]);
       }
 
 
