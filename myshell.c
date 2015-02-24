@@ -373,8 +373,15 @@ void commandGeneral(char** command_list){
 	  else if(cid == 0){
 	    //child code
 	    command_list[ind] = NULL;
-	    close(pipes[0][0]);
-	    if(-1 == dup2(pipes[0][1], STDOUT_FILENO)){
+            //pipe to the left
+            if(pipe_no != 0){
+	      close(pipes[pipe_no-1][1]);
+	      if(-1 == dup2(pipes[pipe_no-1][0], STDIN_FILENO)){
+		perror("Error in dup2 x "); 
+	      }
+	    }
+	    close(pipes[pipe_no][0]);
+	    if(-1 == dup2(pipes[pipe_no][1], STDOUT_FILENO)){
               perror("Error in dup2 x "); 
 	    }
 	    if(-1 == execvp(command_list[0], command_list)){
@@ -387,18 +394,19 @@ void commandGeneral(char** command_list){
 	    if(-1 == waitpid(cid, NULL, 0)){
 	      perror("Error in wait from child.");
 	    }
-	    close(pipes[0][1]);
-	    if(-1 == dup2(pipes[0][0], STDIN_FILENO)){
-              perror("Error in dup2 y "); 
-	    }
 	    command_list += ind+1;
 	    ind = -1;
+	    pipe_no++;
 	  }
 	}
 	ind++;
       }
 
       //the last command
+      close(pipes[pipe_no-1][1]);
+      if(-1 == dup2(pipes[pipe_no-1][0], STDIN_FILENO)){
+	perror("Error in dup2 y "); 
+      }
       if(-1 == execvp(command_list[0], command_list)){
 	//perror(command_list[0]);
 	printf("%s: command not found\n", command_list[0]);
