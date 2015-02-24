@@ -25,6 +25,7 @@
 #define NONE 0
 #define SIMPLE_OUTFILE 1
 #define SIMPLE_INFILE 2
+#define CHAIN 3
 
 //calculate the prompt string using current directory
 void getPrompt(char prompt[]){
@@ -279,6 +280,10 @@ void commandGeneral(char** command_list){
         redirection = SIMPLE_INFILE;         
 	break;
       }
+      else if(strcmp(command_list[ind], "|") == 0){
+        redirection = CHAIN;         
+	break;
+      }
     }
 
     switch(redirection){
@@ -308,11 +313,137 @@ void commandGeneral(char** command_list){
       default: break;
     }
 
-    if(-1 == execvp(command_list[0], command_list)){
-      //unable to exit
-      //perror(command_list[0]);
-      printf("%s: command not found\n", command_list[0]);
+    if(redirection != CHAIN){
+      if(-1 == execvp(command_list[0], command_list)){
+	//perror(command_list[0]);
+	printf("%s: command not found\n", command_list[0]);
+      }
     }
+    else{
+      //the case of multiple files one onto another
+
+      //gather number of pipes required
+      int no_pipes = 0;
+      for(ind = 0;command_list[ind] != NULL;ind++){
+	if(strcmp(command_list[ind], "|") == 0) no_pipes++;
+      }
+
+      int** pipes;
+      pipes = (int**)malloc(no_pipes*sizeof(int*));
+      for(ind = 0;ind < no_pipes;ind++){
+	pipes[ind] = (int*)malloc(2*sizeof(int));
+	if(-1 == pipe(pipes[ind])){
+	  perror("Error in creating pipe ");
+	  return;
+	}
+      }
+
+      for(ind = 0;command_list[ind] != NULL;ind++){
+        printf("%s\n", command_list[ind]);
+      }
+
+      int cid;
+
+      ind = 0;
+      while(1){	
+        if(command_list[ind] == NULL) break;
+        if(strcmp(command_list[ind], "|") == 0){
+	  cid = fork();
+	  if(cid == -1){
+	    //error in forking
+	    printf("Error in forking \n");
+	    return;
+	  }
+	  else if(cid == 0){
+	    //child code
+	    command_list[ind] = NULL;
+	    if(-1 == execvp(command_list[0], command_list)){
+	      //perror(command_list[0]);
+	      printf("%s: command not found\n", command_list[0]);
+	    }
+	  }
+	  else{
+	    //parent code
+	    if(-1 == waitpid(cid, NULL, 0)){
+	      perror("Error in wait from child.");
+	    }
+	    command_list += ind+1;
+	    ind = -1;
+	  }
+	}
+	ind++;
+      }
+
+      //the last command
+      cid = fork();
+      if(cid == -1){
+	//error in forking
+	printf("Error in forking \n");
+	return;
+      }
+      else if(cid == 0){
+	//child code
+	if(-1 == execvp(command_list[0], command_list)){
+	  //perror(command_list[0]);
+	  printf("%s: command not found\n", command_list[0]);
+	}
+      }
+      else{
+	//parent code
+	if(-1 == waitpid(cid, NULL, 0)){
+	  perror("Error in wait from child.");
+	}
+      }
+
+
+      /*
+      ind = 0;
+      while(1){
+        if((strcmp(command_list[ind], "|") == 0) || (command_list[ind] == NULL)){
+	  //every time we see a pipe run the command before
+	  printf("x\n");
+	  if(command_list[ind] == NULL){
+            end = 1;
+	    printf("z");
+	  }
+	  else{
+	    printf("Saw pipe\n");
+	  }
+	  printf("Executing %s\n", command_list[0]);
+	  cid = fork();
+	  if(cid == -1){
+            //error in forking
+	    printf("Error in forking \n");
+	    return;
+	  }
+	  else if(cid == 0){
+	    //child code
+	    command_list[ind] = NULL; 
+	    if(-1 == execvp(command_list[0], command_list)){
+	      //perror(command_list[0]);
+	      printf("%s: command not found\n", command_list[0]);
+	    }
+	  }
+	  else{
+	    //parent code
+	    if(-1 == waitpid(cid, NULL, 0)){
+	      perror("Error in wait from child.");
+	    }
+
+	    if(end == 1){
+	      printf("Exiting..\n");
+	      break; 
+	    }
+
+	    command_list = command_list + ind+1;
+	    ind = -1;
+	  }
+	}
+	ind++; 
+      }
+      */
+    }
+    exit(1); 
   }
   else{
     //parent code 
@@ -321,7 +452,7 @@ void commandGeneral(char** command_list){
       //TODO: find if setsid and/or closing fd 0,1 and 2 must be done
     }
     else{
-     //normal case 
+      //normal case 
       if(-1 == waitpid(pid, NULL, 0)){
 	perror("Error in wait from child.");
       }
