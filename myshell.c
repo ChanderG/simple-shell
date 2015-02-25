@@ -341,22 +341,6 @@ void commandGeneral(char** command_list){
 	}
       }
 
-      /*
-      int** pipes;
-      pipes = (int**)malloc(no_pipes*sizeof(int*));
-      for(ind = 0;ind < no_pipes;ind++){
-	pipes[ind] = (int*)malloc(2*sizeof(int));
-	if(-1 == pipe(pipes[ind])){
-	  perror("Error in creating pipe ");
-	  return;
-	}
-      }
-
-      for(ind = 0;command_list[ind] != NULL;ind++){
-        printf("%s\n", command_list[ind]);
-      }
-      */
-
       int cid;
       int pipe_no = 0;
 
@@ -375,11 +359,13 @@ void commandGeneral(char** command_list){
 	    command_list[ind] = NULL;
             //pipe to the left
             if(pipe_no != 0){
-	      close(pipes[pipe_no-1][1]);
+	      //printf("Left pipe\n");
+	      //close(pipes[pipe_no-1][1]);
 	      if(-1 == dup2(pipes[pipe_no-1][0], STDIN_FILENO)){
 		perror("Error in dup2 x "); 
 	      }
 	    }
+	    //printf("Right pipe\n");
 	    close(pipes[pipe_no][0]);
 	    if(-1 == dup2(pipes[pipe_no][1], STDOUT_FILENO)){
               perror("Error in dup2 x "); 
@@ -391,6 +377,7 @@ void commandGeneral(char** command_list){
 	  }
 	  else{
 	    //parent code
+	    close(pipes[pipe_no][1]);
 	    if(-1 == waitpid(cid, NULL, 0)){
 	      perror("Error in wait from child.");
 	    }
@@ -403,6 +390,7 @@ void commandGeneral(char** command_list){
       }
 
       //the last command
+      //printf("Left pipe\n");
       close(pipes[pipe_no-1][1]);
       if(-1 == dup2(pipes[pipe_no-1][0], STDIN_FILENO)){
 	perror("Error in dup2 y "); 
@@ -412,53 +400,6 @@ void commandGeneral(char** command_list){
 	printf("%s: command not found\n", command_list[0]);
       }
 
-
-      /*
-      ind = 0;
-      while(1){
-        if((strcmp(command_list[ind], "|") == 0) || (command_list[ind] == NULL)){
-	  //every time we see a pipe run the command before
-	  printf("x\n");
-	  if(command_list[ind] == NULL){
-            end = 1;
-	    printf("z");
-	  }
-	  else{
-	    printf("Saw pipe\n");
-	  }
-	  printf("Executing %s\n", command_list[0]);
-	  cid = fork();
-	  if(cid == -1){
-            //error in forking
-	    printf("Error in forking \n");
-	    return;
-	  }
-	  else if(cid == 0){
-	    //child code
-	    command_list[ind] = NULL; 
-	    if(-1 == execvp(command_list[0], command_list)){
-	      //perror(command_list[0]);
-	      printf("%s: command not found\n", command_list[0]);
-	    }
-	  }
-	  else{
-	    //parent code
-	    if(-1 == waitpid(cid, NULL, 0)){
-	      perror("Error in wait from child.");
-	    }
-
-	    if(end == 1){
-	      printf("Exiting..\n");
-	      break; 
-	    }
-
-	    command_list = command_list + ind+1;
-	    ind = -1;
-	  }
-	}
-	ind++; 
-      }
-      */
     }
     exit(1); 
   }
